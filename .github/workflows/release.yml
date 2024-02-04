@@ -47,6 +47,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           body_path: ".github/RELEASE-TEMPLATE.md"
+          prerelease: false
           files: ${{env.BINARY_NAME}}
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
