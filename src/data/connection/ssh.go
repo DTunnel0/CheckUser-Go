@@ -22,7 +22,7 @@ func (ssh *sshConnection) SetNext(connection contract.Connection) {
 }
 
 func (s *sshConnection) CountByUsername(ctx context.Context, username string) int {
-	cmd := fmt.Sprintf("ps -u %s | grep -c grep -c '[s]shd'", username)
+	cmd := fmt.Sprintf("ps -u %s | grep -c '[s]shd'", username)
 	result, _ := s.executor.Execute(ctx, cmd)
 	count, err := strconv.Atoi(result)
 
@@ -39,7 +39,7 @@ func (s *sshConnection) CountByUsername(ctx context.Context, username string) in
 }
 
 func (s *sshConnection) Count(ctx context.Context) int {
-	cmd := fmt.Sprint("pgrep -c sshd")
+	cmd := fmt.Sprint("ps -ef | grep '[s]shd' | grep -cEv 'root|nobody|grep'")
 	result, _ := s.executor.Execute(ctx, cmd)
 	count, err := strconv.Atoi(result)
 	if err != nil {
