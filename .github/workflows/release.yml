@@ -37,19 +37,14 @@ jobs:
           GOOS=${GOOSARCH%/*}
           GOARCH=${GOOSARCH#*/}
           BINARY_NAME=checkuser-$GOOS-$GOARCH
+          VERSION=$(grep -oP 'version\s*=\s*"\K[^"]+' ./src/main.go)
           echo "BINARY_NAME=$BINARY_NAME" >> $GITHUB_ENV
           echo "GOOS=$GOOS" >> $GITHUB_ENV
           echo "GOARCH=$GOARCH" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Build
         run: go build -o "$BINARY_NAME" -v ./src
-
-      - name: Tag and push
-        run: |
-          VERSION=$(grep -oP 'version\s*=\s*"\K[^"]+' ./src/main.go)
-          git tag "v$VERSION"
-          git push origin "v$VERSION"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Release Notes
         run: git log $(git describe HEAD~ --tags --abbrev=0)..HEAD --pretty='format:* %h %s%n  * %an <%ae>' --no-merges >> ".github/RELEASE-TEMPLATE.md"
@@ -57,7 +52,7 @@ jobs:
       - name: Release with Notes
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: $${{env.VERSION}}
+          tag_name: ${{env.VERSION}}
           body_path: ".github/RELEASE-TEMPLATE.md"
           files: ${{env.BINARY_NAME}}
         env:
