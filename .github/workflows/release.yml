@@ -17,10 +17,10 @@ jobs:
     strategy:
       matrix:
         goosarch:
-          - linux/amd64
-          - linux/arm
-          - linux/386
-
+          - 'linux/386'
+          - 'linux/amd64'
+          - 'linux/arm'
+          - 'linux/arm64'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -44,7 +44,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Build
-        run: go build -o "$BINARY_NAME" -v ./src
+        run: go build -ldflags='-w -s' -o "$BINARY_NAME" -v ./src
 
       - name: Release Notes
         run: git log $(git describe HEAD~ --tags --abbrev=0)..HEAD --pretty='format:* %h %s%n  * %an <%ae>' --no-merges >> ".github/RELEASE-TEMPLATE.md"
