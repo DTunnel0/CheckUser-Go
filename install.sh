@@ -108,7 +108,7 @@ main() {
         1) install_checkuser; main ;;
         2) reinstall_checkuser; main ;;
         3) uninstall_checkuser; main ;;
-        4) echo "Saindo." && break ;;
+        0) echo "Saindo.";;
         *) echo "Opção inválida. Tente novamente.";read; main ;;
     esac
 }
