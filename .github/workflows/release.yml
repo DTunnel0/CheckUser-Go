@@ -49,6 +49,8 @@ jobs:
             echo "Release with version $VERSION already exists, skipping release creation."
             exit 0
           fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
 
       - name: Build
         run: go build -ldflags='-w -s' -o "$BINARY_NAME" -v ./src
