@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"os/exec"
+	"strings"
 
 	"github.com/DTunnel0/CheckUser-Go/src/domain/contract"
 )
@@ -20,5 +21,5 @@ func (b *bashExecutor) Execute(ctx context.Context, command string) (string, err
 	if err != nil {
 		return "", err
 	}
-	return string(result), nil
+	return strings.TrimSpace(string(result)), nil
 }
