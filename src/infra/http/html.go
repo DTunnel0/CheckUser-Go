@@ -79,7 +79,7 @@ const HTML_CONTENT = `
     <script>
         const main = async() => {
             const data = await fetch('/count').then(e => e.json())
-            document.querySelector('#total').innerHTML = String(data.data).padStart(2, '0')
+            document.querySelector('#total').innerHTML = String(data.count).padStart(2, '0')
         }
         main()
     </script>
