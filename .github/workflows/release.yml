@@ -49,7 +49,7 @@ jobs:
           VERSION=$(grep -oP 'version\s*=\s*"\K[^"]+' ./src/main.go)
           git tag "v$VERSION"
           git push origin "v$VERSION"
-          echo "$VERSION" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Release Notes
         run: git log $(git describe HEAD~ --tags --abbrev=0)..HEAD --pretty='format:* %h %s%n  * %an <%ae>' --no-merges >> ".github/RELEASE-TEMPLATE.md"
