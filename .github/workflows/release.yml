@@ -42,7 +42,7 @@ jobs:
           go build -o "$BINARY_NAME" -v ./src
       - name: Tag
         run: |
-          version=$(grep -oP 'version\s*=\s*"\K[^"]+ ./src/main.go')
+          version=$(grep -oP 'version\s*=\s*"\K[^"]+' ./src/main.go)
           git tag "v$version"
           git push origin "v$version"
       - name: Release Notes
