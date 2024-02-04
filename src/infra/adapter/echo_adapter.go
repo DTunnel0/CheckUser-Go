@@ -55,5 +55,5 @@ func (ed *EchoAdapter) Adapt(e echo.Context) error {
 		return e.JSONPretty(internalError, newErrorResponse(internalError, err.Error()), " ")
 	}
 
-	return e.JSONPretty(response.Status, newResponse(response.Status, response.Body), " ")
+	return e.JSONPretty(response.Status, response.Body, " ")
 }
