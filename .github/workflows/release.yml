@@ -52,7 +52,7 @@ jobs:
       - name: Release with Notes
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{env.VERSION}}
+          tag_name: v${{env.VERSION}}
           body_path: ".github/RELEASE-TEMPLATE.md"
           files: ${{env.BINARY_NAME}}
         env:
