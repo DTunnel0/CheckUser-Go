@@ -42,16 +42,6 @@ jobs:
           echo "GOARCH=$GOARCH" >> $GITHUB_ENV
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Check for existing release
-        run: |
-          response=$(gh api repos/:owner/:repo/releases --jq '.[] | select(.tag_name == "v$VERSION")')
-          if [[ -n "$response" ]]; then
-            echo "Release with version $VERSION already exists, skipping release creation."
-            exit 0
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.TOKEN }}
-
       - name: Build
         run: go build -ldflags='-w -s' -o "$BINARY_NAME" -v ./src
 
