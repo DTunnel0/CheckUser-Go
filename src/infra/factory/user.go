@@ -10,7 +10,7 @@ import (
 )
 
 func MakeCheckUserHandler() handler.Handler {
-	executor := data.NewBashExecutor()
+	executor := data.NewBashExecutorWithCache()
 	userRepository := repository.NewSystemUserRepository(executor)
 	deviceRepository := repository.NewSQLiteDeviceRepository()
 	checkUserUseCase := user_use_case.NewCheckUserUseCase(userRepository, deviceRepository)
