@@ -13,13 +13,6 @@ import (
 	"github.com/DTunnel0/CheckUser-Go/src/domain/entity"
 )
 
-const (
-	idCommand    = "id -u"
-	chageCommand = "chage -l"
-	vpsCommand   = "vps view -u"
-	archivePath  = "/root/usuarios.db"
-)
-
 type systemUserRepository struct {
 	executor contract.Executor
 }
@@ -31,12 +24,7 @@ func NewSystemUserRepository(executor contract.Executor) contract.UserRepository
 }
 
 func (r *systemUserRepository) FindByUsername(ctx context.Context, username string) (*entity.User, error) {
-	id, err := r.executeCommand(ctx, fmt.Sprintf("%s %s", idCommand, username))
-	if err != nil {
-		return nil, err
-	}
-
-	ID, err := strconv.Atoi(id)
+	ID, err := r.getUserID(username)
 	if err != nil {
 		return nil, err
 	}
@@ -57,34 +45,34 @@ func (r *systemUserRepository) FindByUsername(ctx context.Context, username stri
 }
 
 func (r *systemUserRepository) getConnectionLimit(ctx context.Context, username string) int {
+	connLimitPattern := regexp.MustCompile(`connection_limit:\s*(\d+)`)
+	phpLimitPattern := regexp.MustCompile(`\|\s*(\d+)`)
+	archivePattern := regexp.MustCompile(fmt.Sprintf(`%s\s+(\d+)`, username))
+
+	vpsOut, _ := r.executeCommand(ctx, fmt.Sprintf("vps view -u %s", username))
+	vpsMatches := connLimitPattern.FindAllStringSubmatch(vpsOut, -1)
+
 	limit := 1
-
-	cmd := fmt.Sprintf("%s %s | grep connection_limit: | cut -d' ' -f2", vpsCommand, username)
-	output, err := r.executeCommand(ctx, cmd)
-	if err == nil {
-		num, err := strconv.Atoi(output)
-		if err == nil {
-			limit = num
+	if len(vpsMatches) > 0 {
+		if n, err := strconv.Atoi(vpsMatches[0][1]); err == nil {
+			limit = n
 		}
 	}
 
-	cmd = fmt.Sprintf("php /opt/DragonCore/menu.php printlim2 %s | cut -d'|' -f2", username)
-	output, err = r.executeCommand(ctx, cmd)
-	if err == nil {
-		num, err := strconv.Atoi(output)
-		if err == nil {
-			limit = num
+	phpOut, _ := r.executeCommand(ctx, fmt.Sprintf("php /opt/DragonCore/menu.php printlim2 %s", username))
+	phpMatches := phpLimitPattern.FindAllStringSubmatch(phpOut, -1)
+
+	if len(phpMatches) > 0 {
+		if n, err := strconv.Atoi(phpMatches[0][1]); err == nil {
+			limit = n
 		}
 	}
 
-	data, err := os.ReadFile(archivePath)
+	data, err := os.ReadFile("/root/usuarios.db")
 	if err == nil {
-		re := regexp.MustCompile(fmt.Sprintf("%s\\s+(\\d+)", username))
-		match := re.FindStringSubmatch(string(data))
-		if len(match) > 1 {
-			num, err := strconv.Atoi(match[1])
-			if err == nil {
-				limit = num
+		if archMatches := archivePattern.FindStringSubmatch(string(data)); len(archMatches) > 1 {
+			if n, err := strconv.Atoi(archMatches[1]); err == nil {
+				limit = n
 			}
 		}
 	}
@@ -110,6 +98,21 @@ func (r *systemUserRepository) getExpirationDate(ctx context.Context, username s
 	}
 
 	return expirationDate, nil
+}
+
+func (r *systemUserRepository) getUserID(username string) (int, error) {
+	data, err := os.ReadFile("/etc/passwd")
+	if err != nil {
+		return -1, err
+	}
+
+	pattern := regexp.MustCompile(fmt.Sprintf(`%s\:.*?\:(\d+)\:.*`, username))
+	matches := pattern.FindStringSubmatch(string(data))
+	if len(matches) < 2 {
+		return -1, nil
+	}
+
+	return strconv.Atoi(matches[1])
 }
 
 func (r *systemUserRepository) executeCommand(ctx context.Context, command string) (string, error) {

@@ -16,7 +16,10 @@ func NewCountConnectionsUseCase(connection contract.Connection) *CountConnection
 	}
 }
 
-func (c *CountConnectionsUseCase) Execute(ctx context.Context) int {
-	count := c.connection.Count(ctx)
-	return count
+func (c *CountConnectionsUseCase) Execute(ctx context.Context) (int, error) {
+	count, err := c.connection.Count(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }

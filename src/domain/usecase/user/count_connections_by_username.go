@@ -16,7 +16,10 @@ func NewCountConnectionsByUsernameUseCase(connection contract.Connection) *Count
 	}
 }
 
-func (c *CountConnectionsByUsernameUseCase) Execute(ctx context.Context, username string) int {
-	count := c.connection.CountByUsername(ctx, username)
-	return count
+func (c *CountConnectionsByUsernameUseCase) Execute(ctx context.Context, username string) (int, error) {
+	count, err := c.connection.CountByUsername(ctx, username)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }

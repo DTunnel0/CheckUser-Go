@@ -3,7 +3,7 @@ package connection
 import (
 	"context"
 	"fmt"
-	"strconv"
+	"regexp"
 
 	"github.com/DTunnel0/CheckUser-Go/src/domain/contract"
 )
@@ -21,29 +21,54 @@ func (ssh *sshConnection) SetNext(connection contract.Connection) {
 	ssh.next = connection
 }
 
-func (s *sshConnection) CountByUsername(ctx context.Context, username string) int {
-	cmd := fmt.Sprintf("ps -u %s | grep -c '[s]shd'", username)
-	result, _ := s.executor.Execute(ctx, cmd)
-	count, err := strconv.Atoi(result)
+func (s *sshConnection) CountByUsername(ctx context.Context, username string) (int, error) {
+	cmd := "ps -u " + username
+	result, err := s.executor.Execute(ctx, cmd)
+	if err != nil {
+		return 0, err
+	}
+	sshdPattern := regexp.MustCompile(`(?m)^(\S+)\s+\d+\s+\d+\s+\d+\s+\d+:\d+\s+.*\bsshd\b.*$`)
+	matches := sshdPattern.FindAllStringSubmatch(result, -1)
+	totalConnections := len(matches)
+
+	if s.next != nil {
+		count, err := s.next.CountByUsername(ctx, username)
+		if err == nil {
+			totalConnections += count
+		}
+	}
+
+	return totalConnections, err
+}
+func (s *sshConnection) Count(ctx context.Context) (int, error) {
+	cmd := "ps -ef"
+	result, err := s.executor.Execute(ctx, cmd)
+	if err != nil {
+		return 0, fmt.Errorf("failed to execute command: %w", err)
+	}
+
+	sshdPattern := regexp.MustCompile(`(?m)^(\S+)\s+\d+\s+\d+\s+\d+\s+\d+:\d+\s+.*\bsshd\b.*$`)
+	processMatches := sshdPattern.FindAllStringSubmatch(string(result), -1)
+	forbiddenUsernames := map[string]bool{
+		"root":   true,
+		"nobody": true,
+		"grep":   true,
+	}
 
 	totalConnections := 0
-	if err == nil {
-		totalConnections += count
+	for _, match := range processMatches {
+		username := match[1]
+		if !forbiddenUsernames[username] {
+			totalConnections++
+		}
 	}
 
 	if s.next != nil {
-		totalConnections += s.next.CountByUsername(ctx, username)
+		count, err := s.next.Count(ctx)
+		if err == nil {
+			totalConnections += count
+		}
 	}
 
-	return totalConnections
-}
-
-func (s *sshConnection) Count(ctx context.Context) int {
-	cmd := fmt.Sprint("ps -ef | grep '[s]shd' | grep -cEv 'root|nobody|grep'")
-	result, _ := s.executor.Execute(ctx, cmd)
-	count, err := strconv.Atoi(result)
-	if err != nil {
-		return 0
-	}
-	return count
+	return totalConnections, nil
 }

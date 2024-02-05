@@ -67,31 +67,41 @@ func NewOpenVPNConnection(connection AUXOpenVPNConnection) contract.Connection {
 	return &OpenVPNConnection{connection: connection}
 }
 
-func (vpn *OpenVPNConnection) CountByUsername(ctx context.Context, username string) int {
+func (vpn *OpenVPNConnection) CountByUsername(ctx context.Context, username string) (int, error) {
 	vpn.connection.Connect()
 	defer vpn.connection.Close()
 
 	vpn.connection.Send("status\n")
 	data := vpn.connection.Receive(1024)
-	count := strings.Count(data, username) / 2
+	totalConnections := strings.Count(data, username) / 2
+
 	if vpn.next != nil {
-		count += vpn.next.CountByUsername(ctx, username)
+		count, err := vpn.next.CountByUsername(ctx, username)
+		if err == nil {
+			totalConnections += count
+		}
 	}
-	return count
+
+	return totalConnections, nil
 }
 
-func (vpn *OpenVPNConnection) Count(ctx context.Context) int {
+func (vpn *OpenVPNConnection) Count(ctx context.Context) (int, error) {
 	vpn.connection.Connect()
 	defer vpn.connection.Close()
 
 	vpn.connection.Send("status\n")
 	data := vpn.connection.Receive(1024)
 	regex := regexp.MustCompile(`(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3},\w+,)`)
-	all := len(regex.FindAll([]byte(data), -1))
+	totalConnections := len(regex.FindAll([]byte(data), -1))
+
 	if vpn.next != nil {
-		all += vpn.next.Count(ctx)
+		count, err := vpn.next.Count(ctx)
+		if err == nil {
+			totalConnections += count
+		}
 	}
-	return all
+
+	return totalConnections, nil
 }
 
 func (vpn *OpenVPNConnection) SetNext(next contract.Connection) {

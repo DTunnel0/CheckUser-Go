@@ -18,7 +18,10 @@ func NewCountConnectionsHandler(countConnectionsUseCase *user_use_case.CountConn
 }
 
 func (h *countConnectionsHandler) Handle(ctx context.Context, request *handler.HttpRequest) (*handler.HttpResponse, error) {
-	count := h.countConnectionsUseCase.Execute(ctx)
+	count, err := h.countConnectionsUseCase.Execute(ctx)
+	if err != nil {
+		return nil, err
+	}
 	return &handler.HttpResponse{
 		Body: map[string]int{
 			"count": count,

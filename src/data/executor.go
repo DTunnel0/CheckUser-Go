@@ -2,75 +2,26 @@ package data
 
 import (
 	"context"
-	"errors"
 	"os/exec"
 	"strings"
-	"sync"
-	"time"
 
 	"github.com/DTunnel0/CheckUser-Go/src/domain/contract"
 )
 
 type bashExecutor struct {
-	cache     map[string]*cacheItem
-	mutex     sync.Mutex
-	semaphore chan struct{}
-}
-
-type cacheItem struct {
-	expiry time.Time
-	value  string
 }
 
 func NewBashExecutor() contract.Executor {
-	return &bashExecutor{
-		cache:     make(map[string]*cacheItem),
-		semaphore: make(chan struct{}, 100),
-	}
-}
-
-func (b *bashExecutor) getCachedResult(command string) (string, bool) {
-	b.mutex.Lock()
-	cachedItem, ok := b.cache[command]
-	b.mutex.Unlock()
-
-	if ok && time.Now().Before(cachedItem.expiry) {
-		return cachedItem.value, true
-	}
-
-	return "", false
+	return &bashExecutor{}
 }
 
 func (b *bashExecutor) Execute(ctx context.Context, command string) (string, error) {
-	select {
-	case b.semaphore <- struct{}{}:
-		defer func() { <-b.semaphore }()
-	default:
-		return "", errors.New("")
-	}
+	args := strings.Split(command, " ")
+	cmd := exec.CommandContext(ctx, args[0], args[1:]...)
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
-	defer cancel()
-
-	cachedResult, ok := b.getCachedResult(command)
-	if ok {
-		return cachedResult, nil
-	}
-
-	cmd := exec.CommandContext(ctx, "bash", "-c", command)
-	output, err := cmd.Output()
+	result, err := cmd.Output()
 	if err != nil {
 		return "", err
 	}
-
-	result := strings.TrimSpace(string(output))
-
-	b.mutex.Lock()
-	b.cache[command] = &cacheItem{
-		expiry: time.Now().Add(time.Second * 30),
-		value:  result,
-	}
-	b.mutex.Unlock()
-
-	return result, nil
+	return strings.TrimSpace(string(result)), nil
 }
