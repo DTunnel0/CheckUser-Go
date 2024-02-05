@@ -59,7 +59,7 @@ EOF
     sudo systemctl start checkuser &>/dev/null
     sudo systemctl enable checkuser &>/dev/null
 
-    local addr=$(curl -s icanhazip.com)
+    local addr=$(curl -s https://ipv4.icanhazip.com)
     local url=$(curl -s https://dns.dtunnel.com.br/api/v1/dns/create -X POST --data '{"content": "'"$addr"'"}' | grep -o '"domain": *"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"')
 
     echo -e "\e[1;32mURL: \e[1;33mhttp://$addr:$port\e[0m"
