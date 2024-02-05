@@ -2,7 +2,9 @@ package factory
 
 import (
 	"github.com/DTunnel0/CheckUser-Go/src/data"
+	"github.com/DTunnel0/CheckUser-Go/src/data/cache"
 	"github.com/DTunnel0/CheckUser-Go/src/data/connection"
+	"github.com/DTunnel0/CheckUser-Go/src/data/dao"
 	"github.com/DTunnel0/CheckUser-Go/src/data/repository"
 	user_use_case "github.com/DTunnel0/CheckUser-Go/src/domain/usecase/user"
 	"github.com/DTunnel0/CheckUser-Go/src/infra/handler"
@@ -10,8 +12,10 @@ import (
 )
 
 func MakeCheckUserHandler() handler.Handler {
-	executor := data.NewBashExecutorWithCache()
-	userRepository := repository.NewSystemUserRepository(executor)
+	executor := data.NewBashExecutor()
+	userCaseService := cache.NewUserCacheService()
+	userDAO := dao.NewUserDAO(executor)
+	userRepository := repository.NewSystemUserRepository(userDAO, userCaseService)
 	deviceRepository := repository.NewSQLiteDeviceRepository()
 	checkUserUseCase := user_use_case.NewCheckUserUseCase(userRepository, deviceRepository)
 	return user_handler.NewCheckUserHandler(checkUserUseCase)

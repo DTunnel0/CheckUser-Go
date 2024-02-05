@@ -1,4 +1,4 @@
-package repository
+package dao
 
 import (
 	"context"
@@ -13,43 +13,44 @@ import (
 	"github.com/DTunnel0/CheckUser-Go/src/domain/entity"
 )
 
-type systemUserRepository struct {
+type userDAO struct {
 	executor contract.Executor
 }
 
-func NewSystemUserRepository(executor contract.Executor) contract.UserRepository {
-	return &systemUserRepository{
+func NewUserDAO(executor contract.Executor) contract.UserDAO {
+	return &userDAO{
 		executor: executor,
 	}
 }
 
-func (r *systemUserRepository) FindByUsername(ctx context.Context, username string) (*entity.User, error) {
-	ID, err := r.getUserID(username)
+func (u *userDAO) FindByUsername(ctx context.Context, username string) (*entity.User, error) {
+	ID, err := u.getUserID(username)
 	if err != nil {
 		return nil, err
 	}
 
-	expiresAt, err := r.getExpirationDate(ctx, username)
+	expiresAt, err := u.getExpirationDate(ctx, username)
 	if err != nil {
 		return nil, err
 	}
 
-	limit := r.getConnectionLimit(ctx, username)
+	limit := u.getConnectionLimit(ctx, username)
 
-	return &entity.User{
+	user := &entity.User{
 		ID:        ID,
 		Username:  username,
 		ExpiresAt: expiresAt,
 		Limit:     limit,
-	}, nil
+	}
+	return user, nil
 }
 
-func (r *systemUserRepository) getConnectionLimit(ctx context.Context, username string) int {
+func (u *userDAO) getConnectionLimit(ctx context.Context, username string) int {
 	connLimitPattern := regexp.MustCompile(`connection_limit:\s*(\d+)`)
 	phpLimitPattern := regexp.MustCompile(`\|\s*(\d+)`)
 	archivePattern := regexp.MustCompile(fmt.Sprintf(`%s\s+(\d+)`, username))
 
-	vpsOut, _ := r.executeCommand(ctx, fmt.Sprintf("vps view -u %s", username))
+	vpsOut, _ := u.executeCommand(ctx, fmt.Sprintf("vps view -u %s", username))
 	vpsMatches := connLimitPattern.FindAllStringSubmatch(vpsOut, -1)
 
 	limit := 1
@@ -59,7 +60,7 @@ func (r *systemUserRepository) getConnectionLimit(ctx context.Context, username 
 		}
 	}
 
-	phpOut, _ := r.executeCommand(ctx, fmt.Sprintf("php /opt/DragonCore/menu.php printlim2 %s", username))
+	phpOut, _ := u.executeCommand(ctx, fmt.Sprintf("php /opt/DragonCore/menu.php printlim2 %s", username))
 	phpMatches := phpLimitPattern.FindAllStringSubmatch(phpOut, -1)
 
 	if len(phpMatches) > 0 {
@@ -80,9 +81,9 @@ func (r *systemUserRepository) getConnectionLimit(ctx context.Context, username 
 	return limit
 }
 
-func (r *systemUserRepository) getExpirationDate(ctx context.Context, username string) (time.Time, error) {
+func (u *userDAO) getExpirationDate(ctx context.Context, username string) (time.Time, error) {
 	command := fmt.Sprintf("chage -l %s", username)
-	output, err := r.executor.Execute(ctx, command)
+	output, err := u.executor.Execute(ctx, command)
 	if err != nil {
 		return time.Time{}, err
 	}
@@ -100,7 +101,7 @@ func (r *systemUserRepository) getExpirationDate(ctx context.Context, username s
 	return expirationDate, nil
 }
 
-func (r *systemUserRepository) getUserID(username string) (int, error) {
+func (u *userDAO) getUserID(username string) (int, error) {
 	data, err := os.ReadFile("/etc/passwd")
 	if err != nil {
 		return -1, err
@@ -115,8 +116,8 @@ func (r *systemUserRepository) getUserID(username string) (int, error) {
 	return strconv.Atoi(matches[1])
 }
 
-func (r *systemUserRepository) executeCommand(ctx context.Context, command string) (string, error) {
-	output, err := r.executor.Execute(ctx, command)
+func (u *userDAO) executeCommand(ctx context.Context, command string) (string, error) {
+	output, err := u.executor.Execute(ctx, command)
 	if err != nil {
 		return "", err
 	}
