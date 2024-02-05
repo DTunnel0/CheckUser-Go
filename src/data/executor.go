@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"errors"
 	"os/exec"
 	"strings"
 	"sync"
@@ -11,8 +12,9 @@ import (
 )
 
 type bashExecutor struct {
-	cache map[string]*cacheItem
-	mutex sync.Mutex
+	cache     map[string]*cacheItem
+	mutex     sync.Mutex
+	semaphore chan struct{}
 }
 
 type cacheItem struct {
@@ -22,7 +24,8 @@ type cacheItem struct {
 
 func NewBashExecutor() contract.Executor {
 	return &bashExecutor{
-		cache: make(map[string]*cacheItem),
+		cache:     make(map[string]*cacheItem),
+		semaphore: make(chan struct{}, 100),
 	}
 }
 
@@ -39,6 +42,13 @@ func (b *bashExecutor) getCachedResult(command string) (string, bool) {
 }
 
 func (b *bashExecutor) Execute(ctx context.Context, command string) (string, error) {
+	select {
+	case b.semaphore <- struct{}{}:
+		defer func() { <-b.semaphore }()
+	default:
+		return "", errors.New("")
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
