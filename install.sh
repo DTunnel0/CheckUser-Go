@@ -13,7 +13,7 @@ install_checkuser() {
     local arch=$(get_arch)
 
     if [ "$arch" = "unsupported" ]; then
-        echo "Arquitetura de CPU não suportada!"
+        echo -e "\e[1;31mArquitetura de CPU não suportada!\e[0m"
         exit 1
     fi
 
@@ -22,14 +22,14 @@ install_checkuser() {
     wget -q "https://github.com/DTunnel0/CheckUser-Go/releases/download/$latest_release/$name" -O /usr/local/bin/checkuser
     chmod +x /usr/local/bin/checkuser
 
-    read -p "Porta: " -ei 8000 port
+    read -p "Porta: " -ei 2052 port
 
     if [ -z "$port" ]; then
-        echo "Porta não fornecida. Saindo."
+        echo -e "\e[1;31mPorta não fornecida. Saindo.\e[0m"
         exit 1
     fi
 
-    if systemctl status checkuser >/dev/null 2>&1; then
+    if systemctl status checkuser &>/dev/null 2>&1; then
         echo "Parando o serviço checkuser existente..."
         sudo systemctl stop checkuser
         sudo systemctl disable checkuser
@@ -55,33 +55,37 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-    sudo systemctl daemon-reload
-    sudo systemctl start checkuser
-    sudo systemctl enable checkuser
+    sudo systemctl daemon-reload &>/dev/null
+    sudo systemctl start checkuser &>/dev/null
+    sudo systemctl enable checkuser &>/dev/null
 
     local addr=$(curl -s icanhazip.com)
-    echo "URL: http://$addr:$port"
-    echo "O serviço CheckUser foi instalado e iniciado."
+    local url=$(curl -s https://dns.dtunnel.com.br/api/v1/dns/create -X POST --data '{"content": "'"$addr"'"}' | grep -o '"domain": *"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"')
+
+    echo -e "\e[1;32mURL: \e[1;33mhttp://$addr:$port\e[0m"
+    echo -e "\e[1;32mDOMAIN: \e[1;33mhttp://$url:$port\e[0m"
+    echo -e "\e[1;32mO serviço CheckUser foi instalado e iniciado.\e[0m"
     read
 }
 
 reinstall_checkuser() {
-    sudo systemctl stop checkuser
-    sudo systemctl disable checkuser
+    echo "Parando e removendo o serviço checkuser..."
+    sudo systemctl stop checkuser &>/dev/null
+    sudo systemctl disable checkuser &>/dev/null
     sudo rm /usr/local/bin/checkuser
     sudo rm /etc/systemd/system/checkuser.service
-    sudo systemctl daemon-reload
+    sudo systemctl daemon-reload &>/dev/null
     echo "Serviço checkuser removido."
 
     install_checkuser
 }
 
 uninstall_checkuser() {
-    sudo systemctl stop checkuser
-    sudo systemctl disable checkuser
+    sudo systemctl stop checkuser &>/dev/null
+    sudo systemctl disable checkuser &>/dev/null
     sudo rm /usr/local/bin/checkuser
     sudo rm /etc/systemd/system/checkuser.service
-    sudo systemctl daemon-reload
+    sudo systemctl daemon-reload &>/dev/null
     echo "Serviço checkuser removido."
     read
 }
@@ -89,27 +93,29 @@ uninstall_checkuser() {
 main() {
     clear
 
-    echo -n 'CHECKUSER MENU '
+    echo '---------------------------------'
+    echo -ne '     \e[1;33mCHECKUSER\e[0m'
     if [[ -e /usr/local/bin/checkuser ]]; then
-        echo -e '\e[32m[INSTALADO]\e[0m - Versao:' $(/usr/local/bin/checkuser --version | cut -d' ' -f2)
+        echo -e ' \e[1;32mv'$(/usr/local/bin/checkuser --version | cut -d' ' -f2)'\e[0m'
     else
-        echo -e '\e[31m[DESINSTALADO]\e[0m'
+        echo -e ' \e[1;31m[DESINSTALADO]\e[0m'
     fi
+    echo '---------------------------------'
 
-    echo
-    echo '[01] - INSTALAR CHECKUSER'
-    echo '[02] - REINSTALAR CHECKUSER'
-    echo '[03] - DESINSTALAR CHECKUSER'
-    echo '[00] - SAIR'
-    echo
-    read -p 'Escolha uma opção: ' option
+    echo -e '\e[1;32m[01] - \e[1;31mINSTALAR CHECKUSER\e[0m'
+    echo -e '\e[1;32m[02] - \e[1;31mREINSTALAR CHECKUSER\e[0m'
+    echo -e '\e[1;32m[03] - \e[1;31mDESINSTALAR CHECKUSER\e[0m'
+    echo -e '\e[1;32m[00] - \e[1;31mSAIR\e[0m'
+    echo '---------------------------------'
+    echo -ne '\e[1;32mEscolha uma opção: \e[0m'; 
+    read option
 
     case $option in
         1) install_checkuser; main ;;
         2) reinstall_checkuser; main ;;
         3) uninstall_checkuser; main ;;
         0) echo "Saindo.";;
-        *) echo "Opção inválida. Tente novamente.";read; main ;;
+        *) echo -e "\e[1;31mOpção inválida. Tente novamente.\e[0m";read; main ;;
     esac
 }
 
