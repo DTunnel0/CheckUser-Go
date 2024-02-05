@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"os/exec"
+	"strings"
 
 	"github.com/DTunnel0/CheckUser-Go/src/domain/contract"
 )
@@ -34,5 +35,5 @@ func (b *bashExecutor) Execute(ctx context.Context, command string) (string, err
 	if err != nil {
 		return "", err
 	}
-	return out.String(), nil
+	return strings.TrimSpace(out.String()), nil
 }

@@ -45,5 +45,5 @@ func (s *sshConnection) Count(ctx context.Context) int {
 	if err != nil {
 		return 0
 	}
-	return count - 1
+	return count
 }
