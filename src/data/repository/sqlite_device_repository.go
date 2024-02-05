@@ -8,7 +8,8 @@ import (
 	"github.com/DTunnel0/CheckUser-Go/src/domain/entity"
 	"github.com/labstack/gommon/log"
 
-	_ "github.com/ncruces/go-sqlite3"
+	_ "github.com/ncruces/go-sqlite3/driver"
+	_ "github.com/ncruces/go-sqlite3/embed"
 )
 
 const dbURI = "./db.sqlite3"
