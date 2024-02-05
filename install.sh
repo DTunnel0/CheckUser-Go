@@ -62,8 +62,12 @@ EOF
     local addr=$(curl -s https://ipv4.icanhazip.com)
     local url=$(curl -s https://dns.dtunnel.com.br/api/v1/dns/create -X POST --data '{"content": "'"$addr"'"}' | grep -o '"domain": *"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"')
 
-    echo -e "\e[1;32mURL: \e[1;33mhttp://$addr:$port\e[0m"
-    echo -e "\e[1;32mDOMAIN: \e[1;33mhttp://$url:$port\e[0m"
+    if [[ ! -z $url ]]; then
+        echo -e "\e[1;32mURL: \e[1;33mhttp://$url:$port\e[0m"
+    else 
+        echo -e "\e[1;32mURL: \e[1;33mhttp://$addr:$port\e[0m"
+    fi
+
     echo -e "\e[1;32mO serviço CheckUser foi instalado e iniciado.\e[0m"
     read
 }
