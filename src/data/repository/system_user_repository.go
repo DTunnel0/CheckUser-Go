@@ -68,6 +68,15 @@ func (r *systemUserRepository) getConnectionLimit(ctx context.Context, username 
 		}
 	}
 
+	cmd = fmt.Sprintf("php /opt/DragonCore/menu.php printlim2 %s | cut -d'|' -f2", username)
+	output, err = r.executeCommand(ctx, cmd)
+	if err == nil {
+		num, err := strconv.Atoi(output)
+		if err == nil {
+			limit = num
+		}
+	}
+
 	data, err := os.ReadFile(archivePath)
 	if err == nil {
 		re := regexp.MustCompile(fmt.Sprintf("%s\\s+(\\d+)", username))
