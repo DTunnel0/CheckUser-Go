@@ -7,7 +7,8 @@ import (
 	"github.com/DTunnel0/CheckUser-Go/src/domain/contract"
 	"github.com/DTunnel0/CheckUser-Go/src/domain/entity"
 	"github.com/labstack/gommon/log"
-	_ "github.com/mattn/go-sqlite3"
+
+	_ "github.com/ncruces/go-sqlite3"
 )
 
 const dbURI = "./db.sqlite3"

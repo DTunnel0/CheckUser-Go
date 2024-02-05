@@ -35,7 +35,7 @@ jobs:
           GOOSARCH=${{matrix.goosarch}}
           GOOS=${GOOSARCH%/*}
           GOARCH=${GOOSARCH#*/}
-          CGO_ENABLED=1
+          CGO_ENABLED=0
           BINARY_NAME=checkuser-$GOOS-$GOARCH
           VERSION=$(grep -oP 'version\s*=\s*"\K[^"]+' ./src/main.go)
           echo "BINARY_NAME=$BINARY_NAME" >> $GITHUB_ENV
