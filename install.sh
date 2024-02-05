@@ -8,6 +8,14 @@ get_arch() {
     esac
 }
 
+check_ubuntu_version() {
+    local version=$(lsb_release -rs)
+    if [[ "$version" == "18."* ]]; then
+        echo -e "\e[1;31mVersão do Ubuntu não suportada!\e[0m"
+        exit 1
+    fi
+}
+
 install_checkuser() {
     local latest_release=$(curl -s https://api.github.com/repos/DTunnel0/CheckUser-Go/releases/latest | grep "tag_name" | cut -d'"' -f4)
     local arch=$(get_arch)
@@ -119,4 +127,5 @@ main() {
     esac
 }
 
+check_ubuntu_version
 main
