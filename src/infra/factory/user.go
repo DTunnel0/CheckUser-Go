@@ -23,8 +23,9 @@ func MakeCheckUserHandler() handler.Handler {
 
 func MakeCountConnectionsHandler() handler.Handler {
 	executor := data.NewBashExecutor()
-	ssh := connection.NewSSHConnection(executor)
-	ssh.SetNext(connection.NewOpenVPNConnection(connection.NewAUXOpenVPNConnection("127.0.0.1", 7505)))
-	countConnectionsUseCase := user_use_case.NewCountConnectionsUseCase(ssh)
+	countSSH := connection.NewSSHConnection(executor)
+	countSSH.SetNext(connection.NewOpenVPNConnection(connection.NewAUXOpenVPNConnection("127.0.0.1", 7505)))
+	countConnectionCacheService := cache.NewCountConnectionCacheService()
+	countConnectionsUseCase := user_use_case.NewCountConnectionsUseCase(countSSH, countConnectionCacheService)
 	return user_handler.NewCountConnectionsHandler(countConnectionsUseCase)
 }

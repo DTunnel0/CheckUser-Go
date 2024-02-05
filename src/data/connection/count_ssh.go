@@ -10,18 +10,18 @@ import (
 
 type sshConnection struct {
 	executor contract.Executor
-	next     contract.Connection
+	next     contract.CountConnection
 }
 
-func NewSSHConnection(executor contract.Executor) contract.Connection {
+func NewSSHConnection(executor contract.Executor) contract.CountConnection {
 	return &sshConnection{executor: executor}
 }
 
-func (ssh *sshConnection) SetNext(connection contract.Connection) {
+func (ssh *sshConnection) SetNext(connection contract.CountConnection) {
 	ssh.next = connection
 }
 
-func (s *sshConnection) CountByUsername(ctx context.Context, username string) (int, error) {
+func (s *sshConnection) ByUsername(ctx context.Context, username string) (int, error) {
 	cmd := "ps -u " + username
 	result, err := s.executor.Execute(ctx, cmd)
 	if err != nil {
@@ -32,7 +32,7 @@ func (s *sshConnection) CountByUsername(ctx context.Context, username string) (i
 	totalConnections := len(matches)
 
 	if s.next != nil {
-		count, err := s.next.CountByUsername(ctx, username)
+		count, err := s.next.ByUsername(ctx, username)
 		if err == nil {
 			totalConnections += count
 		}
@@ -40,7 +40,8 @@ func (s *sshConnection) CountByUsername(ctx context.Context, username string) (i
 
 	return totalConnections, err
 }
-func (s *sshConnection) Count(ctx context.Context) (int, error) {
+
+func (s *sshConnection) All(ctx context.Context) (int, error) {
 	cmd := "ps -ef"
 	result, err := s.executor.Execute(ctx, cmd)
 	if err != nil {
@@ -64,7 +65,7 @@ func (s *sshConnection) Count(ctx context.Context) (int, error) {
 	}
 
 	if s.next != nil {
-		count, err := s.next.Count(ctx)
+		count, err := s.next.All(ctx)
 		if err == nil {
 			totalConnections += count
 		}

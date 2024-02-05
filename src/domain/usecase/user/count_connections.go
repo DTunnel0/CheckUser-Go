@@ -2,24 +2,37 @@ package user_use_case
 
 import (
 	"context"
+	"time"
 
 	"github.com/DTunnel0/CheckUser-Go/src/domain/contract"
 )
 
 type CountConnectionsUseCase struct {
-	connection contract.Connection
+	countConnection      contract.CountConnection
+	countConnectionCache contract.CountConnectionCacheService
 }
 
-func NewCountConnectionsUseCase(connection contract.Connection) *CountConnectionsUseCase {
+func NewCountConnectionsUseCase(
+	countConnection contract.CountConnection,
+	countConnectionCache contract.CountConnectionCacheService,
+) *CountConnectionsUseCase {
 	return &CountConnectionsUseCase{
-		connection: connection,
+		countConnection:      countConnection,
+		countConnectionCache: countConnectionCache,
 	}
 }
 
 func (c *CountConnectionsUseCase) Execute(ctx context.Context) (int, error) {
-	count, err := c.connection.Count(ctx)
+	value, found := c.countConnectionCache.Get("__all__")
+	if found {
+		return value, nil
+	}
+
+	value, err := c.countConnection.All(ctx)
 	if err != nil {
 		return 0, err
 	}
-	return count, nil
+
+	c.countConnectionCache.Set("__all__", value, time.Second*10)
+	return value, nil
 }
