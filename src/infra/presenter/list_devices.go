@@ -30,7 +30,7 @@ func (p *ListDevicesPresenter) Present(ctx context.Context) {
 
 	message := fmt.Sprintf("----------------")
 	for _, device := range devices {
-		message += fmt.Sprintf("\n%s", *device)
+		message += fmt.Sprintf("\n%s - %s", device.Username, device.ID)
 	}
 	message += "\n----------------"
 	fmt.Println(message)

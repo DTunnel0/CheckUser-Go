@@ -29,3 +29,14 @@ func MakeCountConnectionsHandler() handler.Handler {
 	countConnectionsUseCase := user_use_case.NewCountConnectionsUseCase(countSSH, countConnectionCacheService)
 	return user_handler.NewCountConnectionsHandler(countConnectionsUseCase)
 }
+
+func MakeDetailsUserHandler() handler.Handler {
+	executor := data.NewBashExecutor()
+	userCaseService := cache.NewUserCacheService()
+	userDAO := dao.NewUserDAO(executor)
+	userRepository := repository.NewSystemUserRepository(userDAO, userCaseService)
+	countSSH := connection.NewSSHConnection(executor)
+	countSSH.SetNext(connection.NewOpenVPNConnection(connection.NewAUXOpenVPNConnection("127.0.0.1", 7505)))
+	checkUserUseCase := user_use_case.NewDetailUserUseCase(userRepository, countSSH)
+	return user_handler.NewDetailUserHandler(checkUserUseCase)
+}

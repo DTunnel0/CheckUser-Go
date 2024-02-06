@@ -6,6 +6,11 @@ import (
 	"github.com/DTunnel0/CheckUser-Go/src/domain/contract"
 )
 
+type ListDevicesOutput struct {
+	ID       string
+	Username string
+}
+
 type ListDevicesUseCase struct {
 	deviceRepository contract.DeviceRepository
 }
@@ -16,14 +21,17 @@ func NewListDevicesUseCase(deviceRepository contract.DeviceRepository) *ListDevi
 	}
 }
 
-func (l *ListDevicesUseCase) Execute(ctx context.Context) ([]*string, error) {
+func (l *ListDevicesUseCase) Execute(ctx context.Context) ([]*ListDevicesOutput, error) {
 	devices, err := l.deviceRepository.ListAll(ctx)
 	if err != nil {
 		return nil, err
 	}
-	result := make([]*string, len(devices))
+	result := make([]*ListDevicesOutput, len(devices))
 	for i, device := range devices {
-		result[i] = &device.ID
+		result[i] = &ListDevicesOutput{
+			ID:       device.ID,
+			Username: device.Username,
+		}
 	}
 	return result, nil
 }
