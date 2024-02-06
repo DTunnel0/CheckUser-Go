@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"os"
+	"path/filepath"
 
 	"github.com/DTunnel0/CheckUser-Go/src/domain/contract"
 	"github.com/DTunnel0/CheckUser-Go/src/domain/entity"
@@ -12,14 +14,29 @@ import (
 	_ "github.com/ncruces/go-sqlite3/embed"
 )
 
-const dbURI = "./db.sqlite3"
+func isRoot() bool {
+	return os.Geteuid() == 0
+}
+
+func dbURI() string {
+	uri := `./db.sqlite3`
+	if isRoot() {
+		uri = `/root/db.sqlite3`
+	}
+
+	db, err := filepath.Abs(uri)
+	if err != nil {
+		return uri
+	}
+	return db
+}
 
 type SQLiteDeviceRepository struct {
 	db *sql.DB
 }
 
 func NewSQLiteDeviceRepository() contract.DeviceRepository {
-	db, err := sql.Open("sqlite3", dbURI)
+	db, err := sql.Open("sqlite3", dbURI())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -108,7 +125,7 @@ func (r *SQLiteDeviceRepository) CountByUsername(ctx context.Context, username s
 }
 
 func DeleteDB() {
-	db, err := sql.Open("sqlite3", dbURI)
+	db, err := sql.Open("sqlite3", dbURI())
 	if err != nil {
 		log.Fatal(err)
 	}
