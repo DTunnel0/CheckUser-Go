@@ -27,10 +27,10 @@ func (s *sshConnection) ByUsername(ctx context.Context, username string) (int, e
 	if err != nil {
 		return 0, err
 	}
-	sshdPattern := regexp.MustCompile(`(?m)^(\S+)\s+\d+\s+\d+\s+\d+\s+\d+:\d+\s+.*\bsshd\b.*$`)
+
+	sshdPattern := regexp.MustCompile(`.*sshd$`)
 	matches := sshdPattern.FindAllStringSubmatch(result, -1)
 	totalConnections := len(matches)
-
 	if s.next != nil {
 		count, err := s.next.ByUsername(ctx, username)
 		if err == nil {
