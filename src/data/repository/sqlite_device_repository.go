@@ -124,6 +124,15 @@ func (r *SQLiteDeviceRepository) CountByUsername(ctx context.Context, username s
 	return count, nil
 }
 
+func (r *SQLiteDeviceRepository) CountAll(ctx context.Context) (int, error) {
+	var count int
+	err := r.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM devices").Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
 func DeleteDB() {
 	db, err := sql.Open("sqlite3", dbURI())
 	if err != nil {

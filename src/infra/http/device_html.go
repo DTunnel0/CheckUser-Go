@@ -1,13 +1,13 @@
 package http
 
-const HTML_CONTENT = `
+const DEVICE_HTML_CONTENT = `
 <!DOCTYPE HTML>
 <html>
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>DT - CHECKUSER</title>
+    <title>DT - DEVICES</title>
 
     <style>
         @import url(https://fonts.googleapis.com/css?family=Roboto:400,300,100,500,700,900);
@@ -70,7 +70,7 @@ const HTML_CONTENT = `
             justify-content: center;
         }
 
-        .user {
+        .devices {
             display: flex;
             flex-direction: column;
             width: 80%;
@@ -85,17 +85,23 @@ const HTML_CONTENT = `
             color: #FFF;
         }
 
-        .details {
+        .device-id-list {
             margin-top: 10px;
-            display: none;
+            display: flex;
             flex-direction: column;
             gap: 5px;
             padding: 5px;
             border-radius: 10px;
             border: #2b2c359d solid 2px;
+            height: 200px;
+            overflow-y: scroll;
         }
 
-        .detail {
+        .device-id-list::-webkit-scrollbar {
+            display: none;
+        }
+
+        .device-id {
             background: #2c2d30;
             border-radius: 10px;
             color: #FFF;
@@ -105,7 +111,7 @@ const HTML_CONTENT = `
             font-family: "Roboto", sans-serif;
         }
 
-        .details-not-found {
+        .device-id-not-found {
             display: none;
             text-align: center;
             margin: 10px 0;
@@ -122,68 +128,67 @@ const HTML_CONTENT = `
     <div class="container">
         <h1>CHECKUSER - @DuTra01</h1>
         <div class="connectionsArea">
-            <h4>TOTAL DE CONEXÕES</h4>
+            <h4>TOTAL DE DEVICE ID</h4>
             <div class="container-count">
                 <span id="total">00</span>
             </div>
         </div>
 
-        <div class="user">
+        <div class="devices">
             <input type="text" class="search" placeholder="Digite um nome...">
-            <div class="details">
-                <span class="detail"></span>
-                <span class="detail"></span>
-                <span class="detail"></span>
-                <span class="detail"></span>
-            </div>
-            <div class="details-not-found">
-                Usuário não encontrado!
+            <div class="device-id-list"></div>
+            <div class="device-id-not-found">
+                Dispositivos não encontrados!
             </div>
         </div>
     </div>
     <script>
         let timeout = null
 
-        const userNotFoundElement = document.querySelector('.details-not-found')
-        const [nameElement, expiresAtElement, limitElement, connectionsElement] = document.querySelectorAll('.detail')
-        const details = document.querySelector('.details')
+        const deviceListElement = document.querySelector('.device-id-list')
         const search = document.querySelector('.search')
+        const devicesNotFoundElement = document.querySelector('.device-id-not-found')
 
-        const showUserNotFound = () => {
-            userNotFoundElement.style.display = 'block'
-            details.style.display = 'none'
+        const createDeviceIDElement = deviceID => {
+            const element = document.createElement('span')
+            element.className = 'device-id'
+            element.innerHTML = deviceID
+            return element
+        }
+        const appendDeviceIDElementInList = element => deviceListElement.appendChild(element)
+
+        const cleanDeviceListElement = () => deviceListElement.innerHTML = ''
+
+        const showDevicesNotFound = () => {
+            devicesNotFoundElement.style.display = 'block'
+            deviceListElement.style.display = 'none'
         }
 
-        const hideUserNotFound = () => {
-            details.style.display = 'flex'
-            userNotFoundElement.style.display = 'none'
-        }
-
-        const hideUserNotFoundAndDetails = () => {
-            userNotFoundElement.style.display = 'none'
-            details.style.display = 'none'
+        const hideDevicesNotFound = () => {
+            deviceListElement.style.display = 'flex'
+            devicesNotFoundElement.style.display = 'none'
         }
 
         const searchHandler = value => setTimeout(async () => {
-            if (!value){
-                hideUserNotFoundAndDetails()
+            if (!value) {
+                showDevices()
                 return
             }
-            
-            const url = "/details/" + value
+
+            const url = "/devices/list/" + value
             const data = await fetch(url).then(r => r.json())
 
-            if (!data?.username) {
-                showUserNotFound()
+            if (!Array.isArray(data) || data.length == 0) {
+                showDevicesNotFound()
                 return
             }
 
-            hideUserNotFound()
-
-            nameElement.innerHTML = data.username ?? ''
-            expiresAtElement.innerHTML = data.expires_at ?? ''
-            limitElement.innerHTML = data.limit?.toString()?.padStart(2, '0') ?? ''
-            connectionsElement.innerHTML = data.connections?.toString()?.padStart(2, '0') ?? ''
+            hideDevicesNotFound()
+            cleanDeviceListElement()
+            data.forEach(device => {
+                const element = createDeviceIDElement(device)
+                appendDeviceIDElementInList(element)
+            })
         }, 500)
 
         search.addEventListener('keyup', e => {
@@ -191,8 +196,22 @@ const HTML_CONTENT = `
             timeout = searchHandler(e.target.value)
         })
 
+        const showDevices = async () => {
+            const url = '/devices/list'
+            const data = await fetch(url).then(e => e.json())
+
+            hideDevicesNotFound()
+            cleanDeviceListElement()
+            data.forEach(device => {
+                const element = createDeviceIDElement(device.username + " - " + device.id)
+                appendDeviceIDElementInList(element)
+            })
+        }
+        showDevices()
+
         const main = async () => {
-            const data = await fetch('/count').then(e => e.json())
+            const url = '/devices/count'
+            const data = await fetch(url).then(e => e.json())
             document.querySelector('#total').innerHTML = data.count.toString().padStart(2, '0')
         }
         main()

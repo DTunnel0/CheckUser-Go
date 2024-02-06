@@ -7,8 +7,8 @@ import (
 )
 
 type ListDevicesOutput struct {
-	ID       string
-	Username string
+	ID       string `json:"id"`
+	Username string `json:"username"`
 }
 
 type ListDevicesUseCase struct {

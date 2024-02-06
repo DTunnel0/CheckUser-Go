@@ -13,4 +13,5 @@ type DeviceRepository interface {
 	CountByUsername(ctx context.Context, username string) (int, error)
 	ListByUsername(ctx context.Context, username string) ([]*entity.Device, error)
 	ListAll(ctx context.Context) ([]*entity.Device, error)
+	CountAll(ctx context.Context) (int, error)
 }

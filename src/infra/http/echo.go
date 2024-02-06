@@ -19,8 +19,13 @@ func Start(host string, port int, sslEnabled bool) {
 		return c.HTML(http.StatusOK, HTML_CONTENT)
 	})
 
+	e.GET("/device", func(c echo.Context) error {
+		return c.HTML(http.StatusOK, DEVICE_HTML_CONTENT)
+	})
+
 	api := e.Group("")
 	route.CreateUserRoute(api)
+	route.CreateDeviceRoute(api)
 
 	addr := fmt.Sprintf("%s:%d", host, port)
 
