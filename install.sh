@@ -22,11 +22,16 @@ install_checkuser() {
     wget -q "https://github.com/DTunnel0/CheckUser-Go/releases/download/$latest_release/$name" -O /usr/local/bin/checkuser
     chmod +x /usr/local/bin/checkuser
 
-    port="2052"
-
-    if [ -z "$port" ]; then
-        echo -e "\e[1;31mPorta não fornecida. Saindo.\e[0m"
-        exit 1
+    
+    local addr=$(curl -s https://ipv4.icanhazip.com)
+    local url=$(curl -s https://dns.dtunnel.com.br/api/v1/dns/create -X POST --data '{"content": "'"$addr"'"}' | grep -o '"domain": *"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"')
+    
+    if [[ -z $url ]]; then
+        local port="2052"
+        local sslEnabled=""
+    else
+        local port="2053"
+        local sslEnabled="--ssl"
     fi
 
     if systemctl status checkuser &>/dev/null 2>&1; then
@@ -48,7 +53,7 @@ User=root
 CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 AmbientCapabilities=CAP_NET_ADMIN CAP_NET_BIND_SERVICE
 NoNewPrivileges=true
-ExecStart=/usr/local/bin/checkuser --start --port $port
+ExecStart=/usr/local/bin/checkuser --start --port $port $sslEnabled
 Restart=always
 
 [Install]
@@ -59,13 +64,10 @@ EOF
     sudo systemctl start checkuser &>/dev/null
     sudo systemctl enable checkuser &>/dev/null
 
-    local addr=$(curl -s https://ipv4.icanhazip.com)
-    local url=$(curl -s https://dns.dtunnel.com.br/api/v1/dns/create -X POST --data '{"content": "'"$addr"'"}' | grep -o '"domain": *"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"')
-
-    if [[ ! -z $url ]]; then
-        echo -e "\e[1;32mURL: \e[1;33mhttp://$url:$port\e[0m"
-    else 
+    if [[ -z $url ]]; then
         echo -e "\e[1;32mURL: \e[1;33mhttp://$addr:$port\e[0m"
+    else 
+        echo -e "\e[1;32mURL: \e[1;33mhttps://$url:$port\e[0m"
     fi
 
     echo -e "\e[1;32mO serviço CheckUser foi instalado e iniciado.\e[0m"
