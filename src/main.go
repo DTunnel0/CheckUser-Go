@@ -26,6 +26,7 @@ type Args struct {
 	Host           string
 	Port           int
 	Start          bool
+	sslEnabled     bool
 	ListAllDevices bool
 	ListDevices    string
 	DeleteDevices  string
@@ -39,6 +40,7 @@ func initializeArgs() *Args {
 	flag.StringVar(&args.Host, "host", "0.0.0.0", "Host to listen")
 	flag.IntVar(&args.Port, "port", 5000, "Port")
 	flag.BoolVar(&args.Start, "start", false, "Start the daemon")
+	flag.BoolVar(&args.sslEnabled, "ssl", false, "Use server SSL")
 
 	flag.BoolVar(&args.ListAllDevices, "list-all-devices", false, "List all devices")
 	flag.StringVar(&args.ListDevices, "list-devices", "", "List devices from a user")
@@ -76,7 +78,7 @@ func main() {
 	}
 
 	if args.Start {
-		http.Start(args.Host, args.Port)
+		http.Start(args.Host, args.Port, args.sslEnabled)
 		return
 	}
 
