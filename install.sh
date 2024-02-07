@@ -24,7 +24,7 @@ install_checkuser() {
 
     
     local addr=$(curl -s https://ipv4.icanhazip.com)
-    local url=$(curl -s https://dns.dtunnel.com.br/api/v1/dns/create -X POST --data '{"content": "'"$addr"'"}' | grep -o '"domain": *"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"')
+    local url=$(curl -s https://dns.dtunnel.com.br/api/v1/dns/create -X POST --data '{"content": "'"$addr"'", "proxied": true}' | grep -o '"domain": *"[^"]*"' | grep -o '"[^"]*"$' | tr -d '"')
     
     if [[ -z $url ]]; then
         local port="2052"
