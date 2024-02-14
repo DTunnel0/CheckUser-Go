@@ -24,20 +24,20 @@ func NewUserDAO(executor contract.Executor) contract.UserDAO {
 }
 
 func (u *userDAO) FindByUsername(ctx context.Context, username string) (*entity.User, error) {
-	ID, err := u.getUserID(username)
+	id, err := u.getUserID(username)
 	if err != nil {
-		return nil, err
+		id = -1
 	}
 
 	expiresAt, err := u.getExpirationDate(ctx, username)
 	if err != nil {
-		return nil, err
+		expiresAt = time.Now().Add(time.Hour * 24 * 30)
 	}
 
 	limit := u.getConnectionLimit(ctx, username)
 
 	user := &entity.User{
-		ID:        ID,
+		ID:        id,
 		Username:  username,
 		ExpiresAt: expiresAt,
 		Limit:     limit,
