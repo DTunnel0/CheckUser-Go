@@ -31,7 +31,7 @@ func (u *userDAO) FindByUsername(ctx context.Context, username string) (*entity.
 
 	expiresAt, err := u.getExpirationDate(ctx, username)
 	if err != nil {
-		expiresAt = time.Now().Add(time.Hour * 24 * 30)
+		expiresAt = time.Now().Add(time.Hour * 24 * 31)
 	}
 
 	limit := u.getConnectionLimit(ctx, username)
