@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	version     = "0.1.9"
+	version     = "0.1.10"
 	version_str = fmt.Sprintf("checkuser %s", version)
 	author      = "Glemison C. Dutra"
 	email       = "glemyson20@gmail.com"

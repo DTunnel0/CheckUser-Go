@@ -66,7 +66,7 @@ func (c *CheckUserUseCase) Execute(ctx context.Context, username, deviceID strin
 	return &CheckUserOutput{
 		ID:          user.ID,
 		Username:    user.Username,
-		ExpiresAt:   user.ExpiresAt.Format("01/01/2006"),
+		ExpiresAt:   user.ExpiresAt.Format("02/01/2006"),
 		ExpiresDays: int(time.Until(user.ExpiresAt).Hours() / 24),
 		Limit:       user.Limit,
 		Connections: connections,
