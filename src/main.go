@@ -98,4 +98,10 @@ func main() {
 		presenter.Present(context.Background(), args.ListDevices)
 		return
 	}
+
+	if args.DeleteDevices != "" {
+		presenter := factory.MakeDeleteDeviceByUsernamePresenter()
+		presenter.Present(context.Background(), args.DeleteDevices)
+		return
+	}
 }
