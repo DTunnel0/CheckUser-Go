@@ -3,17 +3,11 @@ name: Latest Release
 on:
   push:
     branches: ['master']
-  pull_request:
-    branches: ['master']
-
-defaults:
-  run:
-    shell: bash
 
 jobs:
   release:
     name: Build and Create Release
-    runs-on: ubuntu-24.10
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
