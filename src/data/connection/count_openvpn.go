@@ -31,7 +31,7 @@ func NewAUXOpenVPNConnection(host string, port int) AUXOpenVPNConnection {
 }
 
 func (vpn *openVPNConnection) Connect() {
-	conn, _ := net.Dial("tcp", fmt.Sprintf("%s:%d", vpn.host, vpn.port))
+	conn, _ := net.Dial("tcp", net.JoinHostPort(vpn.host, fmt.Sprintf("%d", vpn.port)))
 	vpn.socket = conn
 }
 

@@ -2,9 +2,9 @@ name: Latest Release
 
 on:
   push:
-    branches: [ "master" ]
+    branches: ['master']
   pull_request:
-    branches: [ "master" ]
+    branches: ['master']
 
 defaults:
   run:
@@ -12,49 +12,58 @@ defaults:
 
 jobs:
   release:
-    name: Create Release
-    runs-on: ubuntu-20.04
+    name: Build and Create Release
+    runs-on: ubuntu-24.10
     strategy:
+      fail-fast: false
       matrix:
         goosarch:
-          - 'linux/arm'
-          - 'linux/arm64'
-          - 'linux/amd64'
+          - linux/arm
+          - linux/arm64
+          - linux/amd64
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-go@v3
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
 
-      - name: Get OS and arch info
+      - name: Extract Build Info
+        id: buildinfo
         run: |
-          GOOSARCH=${{matrix.goosarch}}
-          GOOS=${GOOSARCH%/*}
-          GOARCH=${GOOSARCH#*/}
-          CGO_ENABLED=0
-          BINARY_NAME=checkuser-$GOOS-$GOARCH
+          GOOSARCH="${{ matrix.goosarch }}"
+          GOOS="${GOOSARCH%%/*}"
+          GOARCH="${GOOSARCH##*/}"
           VERSION=$(grep -oP 'version\s*=\s*"\K[^"]+' ./src/main.go)
-          echo "BINARY_NAME=$BINARY_NAME" >> $GITHUB_ENV
-          echo "GOOS=$GOOS" >> $GITHUB_ENV
-          echo "GOARCH=$GOARCH" >> $GITHUB_ENV
-          echo "CGO_ENABLED=$CGO_ENABLED" >> $GITHUB_ENV
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          BINARY_NAME="checkuser-${GOOS}-${GOARCH}"
+          echo "goos=${GOOS}" >> "$GITHUB_OUTPUT"
+          echo "goarch=${GOARCH}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "binary=${BINARY_NAME}" >> "$GITHUB_OUTPUT"
 
-      - name: Build
-        run: go build -ldflags='-w -s' -o "$BINARY_NAME" -v ./src
+      - name: Build Binary
+        env:
+          GOOS: ${{ steps.buildinfo.outputs.goos }}
+          GOARCH: ${{ steps.buildinfo.outputs.goarch }}
+          CGO_ENABLED: 0
+        run: |
+          go build -ldflags="-s -w" -o "${{ steps.buildinfo.outputs.binary }}" -v ./src
 
-      - name: Release Notes
-        run: git log $(git describe HEAD~ --tags --abbrev=0)..HEAD --pretty='format:* %h %s%n  * %an <%ae>' --no-merges >> ".github/RELEASE-TEMPLATE.md"
+      - name: Generate Release Notes
+        run: |
+          git log "$(git describe --tags --abbrev=0 HEAD^)"..HEAD \
+            --pretty='* %h %s (%an)' --no-merges > .github/RELEASE-TEMPLATE.md
 
-      - name: Release with Notes
+      - name: Publish GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{env.VERSION}}
-          body_path: ".github/RELEASE-TEMPLATE.md"
-          files: ${{env.BINARY_NAME}}
+          tag_name: v${{ steps.buildinfo.outputs.version }}
+          body_path: .github/RELEASE-TEMPLATE.md
+          files: ${{ steps.buildinfo.outputs.binary }}
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
