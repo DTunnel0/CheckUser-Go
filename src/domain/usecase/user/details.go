@@ -45,7 +45,7 @@ func (c *DetailUserUseCase) Execute(ctx context.Context, username string) (*Deta
 	return &DetailUserOutput{
 		ID:          user.ID,
 		Username:    user.Username,
-		ExpiresAt:   user.ExpiresAt.Format("01/01/2006"),
+		ExpiresAt:   user.ExpiresAt.Format("02/01/2006"),
 		Limit:       user.Limit,
 		ExpiresDays: int(time.Until(user.ExpiresAt).Hours() / 24),
 		Connections: connections,
