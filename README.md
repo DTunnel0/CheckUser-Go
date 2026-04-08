@@ -17,5 +17,5 @@ go build -ldflags="-w -s" -o checkuser ./src
 ## INSTALAÇÃO NO SEU SERVIDOR 🛠️
 Escolha a opção 1:
 ```bash
-bash <(curl -sL https://n9.cl/yo2nc)
+bash <(curl -sL https://raw.githubusercontent.com/DTunnel0/CheckUser-Go/refs/heads/master/install.sh)
 ```
